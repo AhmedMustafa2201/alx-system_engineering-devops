@@ -33,14 +33,19 @@ defaults
         errorfile 503 /etc/haproxy/errors/503.http
         errorfile 504 /etc/haproxy/errors/504.http
 
-frontend http_front
+frontend www-http
+        bind *:80
+        reqadd X-Forwarded-Proto:\ http
+        default_backend http_back
+
+frontend www-https
         bind *:433 ssl crt /etc/letsencrypt/live/www.afa-whatever.tech/www.afa-whatever.tech.pem
-        http-request add-header X-Forwarded-Proto http
+        http-request add-header X-Forwarded-Proto https
         http-request redirect scheme https if !{ ssl_fc }
-        use_backend http_back
+        default_backend http_back
 
 backend http_back
         balance roundrobin
-        http-request redirect scheme https if !{ ssl_fc }
+        redirect scheme https if !{ ssl_fc }
         server 240843-web-01 54.83.129.5:80
         server 240843-web-02 54.175.43.124:80
